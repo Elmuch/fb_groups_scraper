@@ -34,3 +34,34 @@ Task 2015-01-07
 > > 5-Activistas Kajiado Chapter - public group
 > > 6-Maasai Youth Empowerment Strategic Scheme (MYESS) - society/culture
 > > website (page that you can like)
+
+
+# Group logic
+#
+import pdb
+from facepy import GraphAPI
+
+access_token = "CAACEdEose0cBAEqQEZBYrqSJVNaanDIHotZB4cTNZBWwlQ23lMI7oUplHpGi47tLvKevy5MDz6b9wHFgRCxIQKf5ZCTvdvAZAwz5Un6YuZAf6sUXXRZAcVlBXIN3Q6NmYPZC4Inejm3K7qseQZBmdNN4rBZCULJXS4CUPI385PZA5NsDLyWkvk6DSiUadGhGCShb1Yr4i0X1ZBmBSlhpZC531sPg4M51WW9IISYMZD"
+graph = GraphAPI(access_token)
+
+groups = ['293915470632663','324309874271040','206494919465453','255488514638473','334271300068285']
+
+def get_group_data(group_id):
+  data = graph.get(group_id+"/members")
+
+  print "Group ID: %s Number of members: %d" %(group_id, len(data['data']))
+  # for member_data in data['data']:
+  #   print("Name: %s, ID: %s" %(member_data['name'], member_data['id']))
+  # # pdb.set_trace()
+
+def get_distint_members():
+  pass
+
+
+  # driver
+
+  # individuals per group
+  # distinct groups
+  # each individuals activities
+# for group_id in groups:
+get_group_data('293915470632663')

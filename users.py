@@ -1,15 +1,24 @@
 
-import pdb
-from facepy import GraphAPI
-
-access_token = "CAACEdEose0cBALiisUv3ZAhgURRDF2qdVMRQ6tE4t6E8Gf27VbJZCpptiOqA34Vac8AjhnLbIs784m8TWQ0QPuDO5HI9hQQqHS6il9jGGSzASm7MTu3fXP3c7dytRPPlHV7ihnZCqf2wGd8gySwVcler55EE2zA5KQibQZA6Q4KBWqL2DppplsDzXH8x6PNuBmZAsI80lwAN3njtlYkOv82XIOOldQyIZD"
-graph = GraphAPI(access_token)
+from groups import graph
 
 def get_user_groups(user_id):
-  data = graph.get(user_id + "/groups?")
+  data = graph.get(user_id + "/groups")
+  # pdb.set_trace()
   user_groups = []
 
   for u_id in data['data']:
-    user_group.append(u_id['id'])
+    user_groups.append(u_id['id'])
 
   return user_groups
+
+print get_user_groups("me")
+#   def distinct_members(members):
+#   return  [x for x in members if members.count(x) == 1]
+
+# def in_more_than_1_group(lis):
+#   seen = set()
+#   seen_add = seen.add
+#   # adds all elements it doesn't know yet to seen and all other to seen_twice
+#   seen_twice = set( x for x in lis if x in seen or seen_add(x) )
+#   # turn the set into a list (as requested)
+#   return list( seen_twice )

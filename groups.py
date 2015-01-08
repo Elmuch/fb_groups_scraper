@@ -1,59 +1,51 @@
 
-# Group logic
+# Groups
 #
 import pdb
 from facepy import GraphAPI
-import users
 
-access_token = "CAACEdEose0cBALiisUv3ZAhgURRDF2qdVMRQ6tE4t6E8Gf27VbJZCpptiOqA34Vac8AjhnLbIs784m8TWQ0QPuDO5HI9hQQqHS6il9jGGSzASm7MTu3fXP3c7dytRPPlHV7ihnZCqf2wGd8gySwVcler55EE2zA5KQibQZA6Q4KBWqL2DppplsDzXH8x6PNuBmZAsI80lwAN3njtlYkOv82XIOOldQyIZD"
+# It would be nice to get access_token dynamically
+access_token = "CAACEdEose0cBADuR2GZAN4DuzSd5yZAvnyM9BDGl0cRwW9G4NZBg6w3EC0uiFLbzFyrzSwRBHCnAntPWHPY72FFpZARKDh5nRBxvXrfRNRoBc7TanQATKG6Ts10uWCKLzZB3XnnAI4FiseZBhg6Xq3KnlPZB1CZADvVRRKctMkEbmgMCdbFWg3x50OzaeMSmUPLy8zJAk78G40zDoRV5eut0M0ImH9Ctgc4ZD"
 graph = GraphAPI(access_token)
 
-groups  = ['324309874271040','206494919465453','255488514638473','334271300068285']
-members = {}
-dups = {}
+groups  = ['324309874271040','206494919465453','255488514638473','334271300068285'] # This does not include pages, The api is handling this differently
+members = {} # Holds all members across all the groups
 
-def get_group_data(group_id):
+# Just for counting but it would be better to use them for more stuff
+dups    = []
+imports = []
+output = open("output.xls", "w")
+
+def group_members_data(group_id):
   data = graph.get(group_id+"/members?")
   count = 0
 
-  print "\n ------------------------------------------------- \n"
-  print "Group ID: %s Number of members: %d \n" %(group_id, len(data['data']))
+  output.write("\n ------------------------------------------------- \n")
+  output.write("Group ID: %s Number of members: %s \n" %(group_id, len(data['data'])))
 
   for member_data in data['data']:
-    x.append(member_data['id'])
+    imports.append("")
     count += 1
 
     if member_data['id'] in members:
-      if member_data['id'] in dups:
-        print users.get_user_groups(member_data['id'])
-      else:
-        dups[member_data['id']] = group_id
-        # print("DUP [ %s Name: %s,      ID: %s" %( count, member_data['name'], member_data['id']))
+        members[member_data['id']].append(group_id)
+        dups.append("")
     else:
-      members[member_data['id']] = group_id
-      # print(" %s Name: %s,      ID: %s" %( count, member_data['name'], member_data['id']))
-
-def distinct_members(members):
-  return  [x for x in members if members.count(x) == 1]
-
-def in_more_than_1_group(lis):
-  seen = set()
-  seen_add = seen.add
-  # adds all elements it doesn't know yet to seen and all other to seen_twice
-  seen_twice = set( x for x in lis if x in seen or seen_add(x) )
-  # turn the set into a list (as requested)
-  return list( seen_twice )
+      members[member_data['id']] = [group_id]
+      output.write(" %s Name: %s,      ID: %s \n" %( count, member_data['name'], member_data['id']))
 
 for group_id in groups:
-  get_group_data(group_id)
+  group_members_data(group_id)
 
-print "\n Total imports: " + str(len(x))
+output.write("\nUsers in More than on group: \n")
+for member in members:
+  if len(members[member]) > 1:
+   output.write( "ID: %s     Groups: %s \n" %(member, members[member]))
 
-print dups
+# TODO move this to a printing util
+output.write("\nTotal imports: %s \n" %(len(imports)))
+output.write("Total distinct members: %s \n"  %(len(members)))
+output.write("Total number of members appearing in more than one group: %s \n" %(len(dups)))
 
-# not_distinct = in_more_than_group(members)
-
-# print (str(members) + "\n \n" + str(not_distinct))
-
-# print unique(members)
+output.close()
 
