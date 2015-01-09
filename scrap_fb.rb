@@ -2,7 +2,7 @@ require 'koala'
 require 'byebug'
 
 def export_comments
-  @graph = Koala::Facebook::API.new("CAACEdEose0cBAJJCsLLdZCxaxXqVCvuaLQxOVmTQ8DqfNzCeMGz2XE6JU6DvvIqFIZAo1C8NcALhyULxu43oUhkUU6Jbpe8bqJv0qIS1tH8LjXff9OzIfbjvWl2PXvXOoe3MZBy0WYpcI9ZAMcZAC1QFl2vLY760z9hXqpTmH0xgkn0laZBMa3ZBDurhldp3sDXnntvZBlckQSCViFzAnhqv")
+  @graph = Koala::Facebook::API.new("CAACEdEose0cBAIj1ehugwi7NwDb0sHYOKjjKwxbbZC8qyF7JfhAPlsGTaJdUmZBbRsGrlabhFFhS6oGglNTZBInSrdegyspsoCDhjLDwKmE3KGPYwNGV3YIopo15oGyAZCrv7TM6TVvvRyWfeHBpScQjMXJXYHfKYmfZB4EJJL7zOZBXKtTRV1z1IyWe3HeBVbYDmROV3HTiZBLQBW1vz8k7S1WFAZC1n68ZD")
   feed = @graph.get_connection("324309874271040","feed", :limit => 100000000)
   counter = 0
   f = File.open("r.txt","w")
