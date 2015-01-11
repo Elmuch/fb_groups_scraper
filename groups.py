@@ -1,12 +1,12 @@
 
 # Groups
 #
-import pdb
+#!/usr/bin/env python
+
+import client
 import xlsxwriter
-from facepy import GraphAPI
-# It would be nice to get access_token dynamically"
-access_token = "CAACEdEose0cBAOYGwZBENZA4mmccZCud6kOGzxkL9CZBTjyeKKZCZAaeypA1owU2gkCwKxJbxnHJrgDCmVImNtjduhBCdGheDZBD1BwNskZCUq2ZCl2ktHuhbaCw6dODxJhiaIP0uP3EtRTGEyMHIsmfZCrFyJzPdTbDy6knFB0ZAZAsGU0ufDX35wQrp0dwrdPW02LiZBklsr7kApyrU8crt1GTkoh2QHidmldEZD"
-graph = GraphAPI(access_token)
+
+graph = client.graph_client()
 
 groups  = ['324309874271040','206494919465453','255488514638473','334271300068285'] # This does not include pages, The api is handling this differently
 members = {} # Holds all members across all the groups

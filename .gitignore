@@ -1,0 +1,6 @@
+
+/client.py
+/log/*.log
+/*.xlsx
+/*.pyc
+/scripts/

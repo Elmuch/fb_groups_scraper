@@ -1,22 +1,16 @@
-#!/usr/bin/env python
 
-from facepy import GraphAPI
 import re
 from urlparse import urlparse
 from urlparse import parse_qs
-import xlsxwriter
 import time
-import pdb
+import xlsxwriter
+import client
 
-# import groups
-# import facebook
-
-access_token = "CAACEdEose0cBAG2IIhcw27TGPnbq9I3aYcLzAFRrxcfIqkA4IM4NRF8wG3uKdMB2SlTSRaeNeR1Yy4tecmGpqY4IuSqsNT6aUhmuv8Itwhf852mI9gaieFe93SVhc6YJPa79uel65KhSbymhfYPPZA5GOP5znwZA1XT1eAnG8jxvW2Bf29aMASuZBijAJ0BoSZAUHnGAZBxRez92C87ZBSQQ1SpZB1Tn6oZD"
-graph = GraphAPI(access_token)
+graph = client.graph_client()
 
 # Get my latest posts per group
 # groups  = ['324309874271040','206494919465453','255488514638473','334271300068285']
-groups  = ['324309874271040']
+groups  = ['324309874271040'] # Use this for testing, otherwise use the four groups, remember to uncomment  time.sleep(1)
 feeds = []
 for group_id in groups:
   myuntil = ""
@@ -46,103 +40,93 @@ worksheet = workbook.add_worksheet()
 comments  = workbook.add_worksheet()
 
 comments.write(0, 0, "EntryID")
-comments.write(0, 1, "Post")
-comments.write(0, 2, "Likes")
-comments.write(0, 3, "Comments")
-comments.write(0, 4, "likes_count")
-comments.write(0, 5, "Link")
+comments.write(0, 1, "EntryType")
+comments.write(0, 2, "Post")
+comments.write(0, 3, "Likes")
+comments.write(0, 4, "Comments")
+comments.write(0, 5, "likes")
+comments.write(0, 6, "likes_count")
+comments.write(0, 7, "Link")
 comment_row = []
 error_count = []
-output = open("errors_logger.txt", "w")
+output = open("errors_logger.txt", "w") # For logging the errors
+posi = [0]
 
-# Some abstraction
+def get_likes(data, col):
+  if 'likes' in data:
+    likes = []
+    for like in data['likes']['data']:
+      likes.append(str(like['id']))
+      comments.write(len(comment_row), col, str(likes))
+
+def get_comments(entry_id, data):
+  count = 0
+  for entry in  data['comments']['data']:
+    count +=1
+    comments.write(len(comment_row) , 4, entry['message'])
+    comments_data = graph.get(entry_id + "_" + entry['id'] + "?fields=likes") # Get the comment likes from a different API-endpoint
+    get_likes(comments_data, 5)
+    comments.write(len(comment_row) , 6, entry['like_count']) # we will have to parse from the page here to get the ones who commented.
+    comment_row.append("") # Could use lambda here
+  posi.append(count)
+
+def get_id_and_link(entry_id, data):
+  comment_row.append("")
+  comments.write(len(comment_row), 0, entry_id)
+  comments.write(len(comment_row), 7, data['actions'][0]['link']) # the link
+
+def get_caption(data): # This might be uncessary but I thought of including it.
+  if 'caption' in data:
+    comments.write(len(comment_row), 2, data['caption']) # Note, it get imported onto the posts column
 
 def get_entries(entry_id):
-  entries = workbook.add_worksheet()
+  print ("Importing Feed: %s" %(entry_id))
+  print "rows count" + str(len(comment_row))
   try:
     data = graph.get(entry_id + "/")
-    # time.sleep(1) # Lest we facebook's hit/second limit
+    # time.sleep(1) # Lest we facebook's hit/second limit, one second is too long. Ideal way is to set a timer and a delay. multi-thread??
+
     if 'comments' in data and 'message' in data:
-      comment_row.append("")
-      comments.write(len(comment_row), 0, entry_id)
-      comments.write(len(comment_row), 1, data['message']) # Empty cells should be equal the number of comments
-      comments.write(len(comment_row), 5, data['actions'][0]['link']) # the link
-
-      if 'likes' in data:
-        # pdb.set_trace()
-        likes = []
-        for like in data['likes']['data']:
-          likes.append(like['id'])
-        comments.write(len(comment_row), 2, str(likes))
-
-      for entry in  data['comments']['data']:
-        print ("Imports count: " + str(len(comment_row)))
-        comment_row.append("") # Could use lambda here
-        comments.write(len(comment_row), 3, entry['message'])
-        comments.write(len(comment_row), 4, entry['like_count']) # we will have to parse from the page here to get the ones who commented.
+      get_id_and_link(entry_id, data)
+      comments.write(len(comment_row), 2, data['message']) # Empty cells should be equal the number of comments
+      comments.write(len(comment_row), 1, 'message')
+      get_likes(data, 3)
+      get_comments(entry_id, data)
 
     elif 'comments' in data: # This is a case with video posts or photos
-      comment_row.append("")
-      if 'caption' in data: # yet to know which type have captions.
-        comments.write(len(comment_row), 1, data['caption'])
-
-      if 'likes' in data:
-        likes = []
-        for like in data['likes']['data']:
-          likes.append(like['id'])
-        comments.write(len(comment_row), 2, str(likes))
-
-      comments.write(len(comment_row), 0, entry_id)
-      comments.write(len(comment_row), 5, data['actions'][0]['link']) # the link
-      for entry in  data['comments']['data']:
-        print ("Imports count: " + str(len(comment_row)))
-        comment_row.append("") # could use lambda here
-        comments.write(len(comment_row), 3, entry['message'])
-        comments.write(len(comment_row), 4, entry['like_count'])
+      get_id_and_link(entry_id, data)
+      comments.write(len(comment_row), 1, 'media')
+      get_caption(data)
+      get_likes(data, 3)
+      get_comments(entry_id, data)
 
     elif ('message' in data): # This is a post (message) with no comments
-      comment_row.append("")
-      if 'likes' in data:
-        likes = []
-        for like in data['likes']['data']:
-          likes.append(like['id'])
-        comments.write(len(comment_row), 2, str(likes))
-
-      comments.write(len(comment_row), 0, entry_id)
-      comments.write(len(comment_row), 5, data['actions'][0]['link']) # the link
-      comments.write(len(comment_row), 1, data['message'])
-      # How do we find likes here?
-    elif 'data' in data:
-      # I saw this once, may be I was delirious.. but if gets logged, handle it!
+      get_id_and_link(entry_id, data)
+      comments.write(len(comment_row), 1, 'media')
+      comments.write(len(comment_row), 2, data['message'])
+      get_likes(data, 3)
+    elif 'data' in data: # I saw this once, may be I was delirious.. but if it gets logged, handle it!
       output.write("entry_id %s is super weird\n" %(entry_id))
-    else: # A media post with no message or comments
-      comment_row.append("")
-      comments.write(len(comment_row), 0, entry_id)
-      comments.write(len(comment_row), 5, data['actions'][0]['link'])
 
-      if 'caption' in data:
-        comments.write(len(comment_row), 1, data['caption'])
-      if 'likes' in data:
-        likes = []
-        for like in data['likes']['data']:
-          likes.append(like['id'])
-        comments.write(len(comment_row), 2, str(likes))
+    else: # A media post with no message or comments
+      get_id_and_link(entry_id, data)
+      comments.write(len(comment_row), 1, 'media')
+      get_caption(data)
+      get_likes(data, 3)
 
   except Exception, e:
     error_count.append("")
     print e
-    output.write("Error while importing entry: %s of type- %s %s \n" %(entry_id, e, type(e))) # Log the error, if there is situation unhandled situation
+    output.write("Error while importing entry: %s of type- %s %s \n" %(entry_id, e, type(e))) # Log the error, if there is situation unhandled
     # pdb.set_trace()
-    # comments.write(0, 1, entry['likes'])
 
 row = 0
 worksheet.write(0, 0, "MemberName")
 worksheet.write(0, 1, "MemberID")
-worksheet.write(0, 2, "EntryType")
-worksheet.write(0, 3, "EntryID")
-worksheet.write(0, 4, "GroupID")
-worksheet.write(0, 5, "GroupName")
-worksheet.write(0, 6, "AssociatedID")
+worksheet.write(0, 2, "EntryID")
+worksheet.write(0, 3, "GroupID")   # This is a list, because of tags, Hence a representative of all tagged
+worksheet.write(0, 4, "GroupName") # This is a list, because of tags, Hence a representative of all tagged
+worksheet.write(0, 5, "AssociatedID")
 
 
 for feed in feeds:
@@ -150,12 +134,18 @@ for feed in feeds:
   get_entries(feed['id'])
   worksheet.write(row, 0, feed['from']['name'])
   worksheet.write(row, 1, feed['from']['id'])
-  worksheet.write(row, 2, feed['type'])
-  worksheet.write(row, 3, feed['id'])
-  worksheet.write(row, 4, feed['to']['data'][0]['id'])
-  worksheet.write(row, 5, feed['to']['data'][0]['name'])
+  worksheet.write(row, 2, feed['id'])
+
+  names, ids = [], []
+  for tag in feed['to']['data']:
+    names.append(tag['name'])
+    ids.append(str(tag['id']))
+  worksheet.write(row, 3, str(ids))
+  worksheet.write(row, 4, str(names))
 
 print "\n Total entries imported: %s Not imported: %s" %(len(feeds), len(error_count))
+output.write("\n Total total logged: %s" %(len(error_count)))
+
 workbook.close()
 output.close()
 
