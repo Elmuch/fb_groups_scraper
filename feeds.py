@@ -4,6 +4,7 @@ from urlparse import urlparse
 from urlparse import parse_qs
 import time
 import xlsxwriter
+import pdb
 import client
 
 graph = client.graph_client()
@@ -11,8 +12,10 @@ graph = client.graph_client()
 # Get my latest posts per group
 # groups  = ['324309874271040','206494919465453','255488514638473','334271300068285']
 groups  = ['324309874271040'] # Use this for testing, otherwise use the four groups, remember to uncomment  time.sleep(1)
+pages = ['202027666597795']
+
 feeds = []
-for group_id in groups:
+for group_id in pages:
   myuntil = ""
   nextuntil = ""
   same = False
@@ -64,16 +67,21 @@ def get_comments(entry_id, data):
   for entry in  data['comments']['data']:
     count +=1
     comments.write(len(comment_row) , 4, entry['message'])
-    comments_data = graph.get(entry_id + "_" + entry['id'] + "?fields=likes") # Get the comment likes from a different API-endpoint
+    comments.write(len(comment_row) , 6, entry['like_count']) # we will have to parse from the page here to get the ones who commented
+    if entry['id'].find("_") == -1:
+      comments_data = graph.get(entry_id + "_" + entry['id'] + "?fields=likes") # Get the comment likes from a different API-endpoint
+    else:
+      comments_data = graph.get(entry['id']+"?fields=likes")
     get_likes(comments_data, 5)
-    comments.write(len(comment_row) , 6, entry['like_count']) # we will have to parse from the page here to get the ones who commented.
-    comment_row.append("") # Could use lambda here
+    comment_row.append("") # Couldad use lambda here
+
   posi.append(count)
 
 def get_id_and_link(entry_id, data):
   comment_row.append("")
   comments.write(len(comment_row), 0, entry_id)
-  comments.write(len(comment_row), 7, data['actions'][0]['link']) # the link
+  if 'actions' in data:
+      comments.write(len(comment_row), 7, data['actions'][0]['link']) # the link
 
 def get_caption(data): # This might be uncessary but I thought of including it.
   if 'caption' in data:
@@ -137,11 +145,12 @@ for feed in feeds:
   worksheet.write(row, 2, feed['id'])
 
   names, ids = [], []
-  for tag in feed['to']['data']:
-    names.append(tag['name'])
-    ids.append(str(tag['id']))
-  worksheet.write(row, 3, str(ids))
-  worksheet.write(row, 4, str(names))
+  if 'to' in feed:
+    for tag in feed['to']['data']:
+      names.append(tag['name'])
+      ids.append(str(tag['id']))
+    worksheet.write(row, 3, str(ids))
+    worksheet.write(row, 4, str(names))
 
 print "\n Total entries imported: %s Not imported: %s" %(len(feeds), len(error_count))
 output.write("\n Total total logged: %s" %(len(error_count)))
