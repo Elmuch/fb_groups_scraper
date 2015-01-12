@@ -11,7 +11,7 @@ Get your token here:
 Accounts for testing:
   user name     | email               |  password      |  ID
 ................|.....................|................|.............
-  Joey Lamothe  | jlamlam@hotmail.com | 12JLam!@12345  | ********
+  Joey Lamothe  | jlamlam@hotmail.com | *************  | 100008796756057
 
 Groups:
   1-Elangata Wuas Youth Association
