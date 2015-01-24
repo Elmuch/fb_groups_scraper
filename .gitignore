@@ -1,6 +1,6 @@
 
 /client.py
 /log/*.log
-/*.xlsx
+/data*.xlsx
 /*.pyc
-/scripts/
+/to_send/
