@@ -1,0 +1,7 @@
+#!/usr/bin/env python
+
+from facepy import GraphAPI
+
+def graph_client():
+  token = "CAACEdEose0cBAItjsLkYBmOOZCMUDUo7i9MEIS6Kjgj0c8pfZCDakZCTZAoCpri6slXeUnmGA2EyYbvMIpucPAslcq4qrmGrhXH6WMOL0WvXIiS27mg127kf0KpMpop7hiTSVvdSNEZAZCm6xB3QoasUhMHzQ3MyMZCzSiZC9r47DIZAbQtEx3Qf5189yGaVnWPY3VdlzVHGdeeqxmkZA7ZCqCxCkFgAhD9tDkZD"
+  return GraphAPI(token)
