@@ -74,9 +74,7 @@ def extract(workbook, groups,pages=[]):
         else: # if there is no to, then this is a page feed which was posted by the page itself
           names.append(u'Maa Youth Empowerment Strategic Scheme')
           ids.append(pages[0])
-
-        entries.write(len(row), 1, str(ids))
-        entries.write(len(row), 2, str(names))
+        get_comments_replies(comment_data['id'])
         entries.write(len(row), 1, (str(ids)))
         entries.write(len(row), 2, (str(names)))
         entries.write(len(row), 5, feed['id'])
@@ -87,6 +85,63 @@ def extract(workbook, groups,pages=[]):
         entries.write(len(row), 9, comment_data['created_time'])
         entries.write(len(row), 11, comment_data['like_count'])
         entries.write(len(row), 12, comment_data['message'])
+
+  def get_comments_replies(comment_id):
+    data = graph.get(comment_id + "/comments") # get replies
+    if data['data'] != []:
+      for comment_data in data['data']:
+        ids = []
+        names = []
+        if 'to' in feed:
+          for post_to in feed['to']['data']:
+            ids.append(post_to['id'])
+            names.append(post_to['name'])
+        else: # if there is no to, then this is a page feed which was posted by the page itself
+          names.append(u'Maa Youth Empowerment Strategic Scheme')
+          ids.append(pages[0])
+
+        entries.write(len(row), 1, (str(ids)))
+        entries.write(len(row), 2, (str(names)))
+        entries.write(len(row), 5, feed['id'])
+        entries.write(len(row), 0, comment_data['id'])
+        entries.write(len(row), 3, comment_data['from']['id'])
+        entries.write(len(row), 4, comment_data['from']['name'])
+        entries.write(len(row), 5, comment_id) # AssociatedID will be parent comment ID
+        entries.write(len(row), 6, "SubPostCommentReply")
+        entries.write(len(row), 9, comment_data['created_time'])
+        entries.write(len(row), 11, comment_data['like_count'])
+        entries.write(len(row), 12, comment_data['message'])
+        row.append("")
+
+        if comment_data['like_count'] != 0:
+          get_comments_replies_likes(comment_data)
+
+
+  def get_comments_replies_likes(comment_reply):
+    if comment_reply['id'].find("_") == -1:
+      data = graph.get(comment_reply['id']+"_"+comment_reply['id']+"?fields=likes") # Get the comment likes from a different API-endpoint
+    else:
+      data = graph.get(comment_reply['id']+"?fields=likes")
+      names = []
+      ids = []
+    if 'to' in comment_reply:
+      for like_to in comment_reply['to']['data']:
+        ids.append(like_to['id'])
+        names.append(like_to['name'])
+    else: # if there is no to, then this is a page feed which was posted by the page itself
+      names.append(u'Maa Youth Empowerment Strategic Scheme')
+      ids.append(pages[0])
+
+    if 'likes' in data:
+      for like_data in  data['likes']['data']:
+        entries.write(len(row), 1, (str(ids)))
+        entries.write(len(row), 2, (str(names)))
+        entries.write(len(row), 3, like_data['id'])
+        entries.write(len(row), 4, like_data['name'])
+        entries.write(len(row), 5, comment_reply['id']) # Parent is the reply to a comment
+        entries.write(len(row), 6, "SubPostCommentReplyLike")
+        row.append("")
+
 
   def get_post(row, feed):
     if 'actions' in feed: # eliminate irrelevant
@@ -136,7 +191,7 @@ def extract(workbook, groups,pages=[]):
         entries.write(len(row), 13, 0)
 
 
-  def get_comments_likes(feed):
+  def get_comments_likes(feed, entry_type = ""):
     if "comments" in feed:
       for comment in feed['comments']['data']:
         if comment['like_count'] != 0:

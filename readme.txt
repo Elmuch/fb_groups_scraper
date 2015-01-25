@@ -25,3 +25,6 @@ Pages:
 
 Debugging
   use pdb.set_trace()
+
+To get the data:
+  python scripts/run
