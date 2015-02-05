@@ -10,7 +10,7 @@ import re
 from urlparse import urlparse
 from urlparse import parse_qs
 
-def extract(workbook, groups, pages=[]):
+def extract(worksheet, groups_ids, pages_ids=[]):
   print "--------importing members data-------------"
   graph = client.graph_client()
 
@@ -20,16 +20,11 @@ def extract(workbook, groups, pages=[]):
   imports = []
   group_lens = []
   feeds = []
-  worksheet = workbook.add_worksheet()
-  worksheet.write(0, 0, "MemberID")
-  worksheet.write(0, 1, "MemberName")
-  worksheet.write(0, 2, "GroupID")
-  worksheet.write(0, 3, "GroupName")
 
 
-  def get_page_data(imports): # This is going to happen from a different endpoint
-    print "importing from page"
-    name = graph.get("202027666597795/")
+  def get_page_data(imports, page_id): # This is going to happen from a different endpoint
+    print "importing from page ID -", page_id
+    name = graph.get(page_id)
     myuntil = ""
     nextuntil = ""
     same = False
@@ -38,7 +33,7 @@ def extract(workbook, groups, pages=[]):
 
     while not same:
       myuntil = nextuntil
-      data = graph.get("202027666597795/feed?limit=999999" + nextuntil)
+      data = graph.get(page_id + "/feed?limit=999999" + nextuntil)
       nextuntil = "&until=" + parse_qs(urlparse(data['paging']['next']).query)["until"][0]
       same = (myuntil == nextuntil)
       if not same:
@@ -50,10 +45,8 @@ def extract(workbook, groups, pages=[]):
 
       pages_interactors.append(feeder['from']['id'])
       imports.append("")
-      worksheet.write(len(imports), 0, feeder['from']['id'])
-      worksheet.write(len(imports), 1, feeder['from']['name'])
-      worksheet.write(len(imports), 2, "202027666597795")
-      worksheet.write(len(imports), 3, name['name']) # could as well hard-code here
+      worksheet.writerow((feeder['from']['id'] ,feeder['from']['name'],
+                          page_id, name['name']))
 
   def get_group_name(group_id, imports):
       data = graph.get(group_id+"/")
@@ -77,18 +70,19 @@ def extract(workbook, groups, pages=[]):
     else:
       members[member_data['id']] = [group_id]
 
-  for group_id in groups:
+  for group_id in groups_ids:
     get_all(group_id)
 
-  get_page_data(imports) # Getting data from the page is rather different from groups
+  for page_id in pages_ids:
+    get_page_data(imports, page_id) # Getting data from the page is rather different from groups
 
-  dup_members = workbook.add_worksheet()
-  count = 0
-  dup_members.write(0, 0, "MemberID")
-  dup_members.write(0, 1, "GroupsIDs")
+  # dup_members = workbook.add_worksheet()
+  # count = 0
+  # dup_members.write(0, 0, "MemberID")
+  # dup_members.write(0, 1, "GroupsIDs")
 
-  for member in members:
-    if len(members[member]) > 1:
-      count += 1
-      dup_members.write(count, 0, member)
-      dup_members.write(count, 1, str(members[member]))
+  # for member in members:
+  #   if len(members[member]) > 1:
+  #     count += 1
+  #     dup_members.write(count, 0, member)
+  #     dup_members.write(count, 1, str(members[member]))
