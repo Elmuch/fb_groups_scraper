@@ -1,4 +1,4 @@
-
+import client
 import xlsxwriter
 import pdb
 from urlparse import urlparse
@@ -6,9 +6,12 @@ from urlparse import parse_qs
 import time
 
 
-def extract(graph, feeds, entries):
-
-  def get_post(feed):
+def extract(feeds, entries):
+  
+  def get_post(graph, feed):
+    if feed['id'] == "324309874271040_801119566590066":
+      pdb.set_trace()
+      
     if 'actions' in feed:
       ids = []
       names = []
@@ -35,7 +38,8 @@ def extract(graph, feeds, entries):
         caption = feed['caption'].encode('ascii', 'ignore')
       if 'description' in feed:
         description = feed['description'].encode('ascii', 'ignore')
-
+      if 'caption' in feed and feed['type'] == "status":
+        entry_type = "Post Media"
       if ('shares' in feed):
         share_count = feed['shares']['count']
 
@@ -79,7 +83,7 @@ def extract(graph, feeds, entries):
                       original_mbr_id, original_mbr_name))
 
 
-  def get_likes(feed):
+  def get_likes(graph, feed):
     if 'likes' in feed:
       ids = []
       names = []
@@ -97,7 +101,7 @@ def extract(graph, feeds, entries):
                         like_data['name'].encode('ascii', 'ignore'),feed['id'], "SubPostLike",
                         "NA", "NA", "NA","NA","NA","NA", "NA","NA","NA","NA"))
 
-  def get_comments(feed):
+  def get_comments(graph, feed):
     if 'comments' in feed:
       comments_count = 0
       for comment_data in feed['comments']['data']:
@@ -192,11 +196,17 @@ def extract(graph, feeds, entries):
                         "NA", "NA", "NA","NA", "NA", "NA","NA","NA","NA"))
 
   
-
+  graph = client.graph_client()
+  print "Call"
+  
   for feed in feeds:
     print  "Importing Feed:", str(feed['id'])
-    get_post(feed)
-    get_comments(feed)
-    get_likes(feed)
-  
-  return True
+    try:
+      get_post(graph, feed)
+      get_comments(graph, feed)
+      get_likes(graph, feed)
+    except Exception, e:
+      print e
+      token = raw_input("\nEnter New token ")
+      graph = client.graph(token)
+      continue

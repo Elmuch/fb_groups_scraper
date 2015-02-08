@@ -6,6 +6,7 @@
 import client
 import xlsxwriter
 import pdb
+import csv
 import re
 from urlparse import urlparse
 from urlparse import parse_qs
@@ -14,15 +15,14 @@ def extract(worksheet, groups_ids, pages_ids=[]):
   print "--------importing members data-------------"
   graph = client.graph_client()
 
-  members = {} # Holds all members across all the groups
-
+  members = {}
+  members_names = {}
   dups    = []
   imports = []
   group_lens = []
   feeds = []
 
-
-  def get_page_data(imports, page_id): # This is going to happen from a different endpoint
+  def get_page_data(page_id): # This is going to happen from a different endpoint
     print "importing from page ID -", page_id
     name = graph.get(page_id)
     myuntil = ""
@@ -45,44 +45,41 @@ def extract(worksheet, groups_ids, pages_ids=[]):
 
       pages_interactors.append(feeder['from']['id'])
       imports.append("")
-      worksheet.writerow((feeder['from']['id'] ,feeder['from']['name'],
-                          page_id, name['name']))
-
-  def get_group_name(group_id, imports):
-      data = graph.get(group_id+"/")
-      worksheet.write(len(imports), 3, data['name'])
+      worksheet.writerow((feeder['from']['id'] ,feeder['from']['name'].encode('ascii', 'ignore'),
+                          page_id, name['name'].encode('ascii', 'ignore')))
+      get_distinct(feeder['from']['id'],feeder['from']['name'],page_id, name['name'])
 
   def get_all(group_id):
-      print "importing: %s" %(group_id)
-      data = graph.get(group_id + "/members?")
-      for member_data in data['data']:
-        imports.append("")
-        worksheet.write(len(imports), 1, member_data['name'])
-        worksheet.write(len(imports), 0, member_data['id'])
-        worksheet.write(len(imports), 2, group_id)
-        get_group_name(group_id, imports)
-        get_distinct(member_data)
+    print "Importing from group ID-: %s" %(group_id)
+    data = graph.get(group_id + "/members?")
+    group_name = graph.get(group_id+"/")['name']
+    for member_data in data['data']:
+      worksheet.writerow((member_data['id'], member_data['name'].encode('ascii', 'ignore'),group_id, group_name.encode('ascii', 'ignore')))
+      get_distinct(member_data['id'],member_data['name'], group_id, group_name)
 
-
-  def get_distinct(member_data):
-    if member_data['id'] in members: # If the id exists in the previous iteration
-        members[member_data['id']].append(group_id) # push to the list
+  def get_distinct(member_id, member_name, group_id, group_name):
+    if member_id in members: # If the id exists in the previous iteration
+      members[member_id].append(group_id) 
+      members_names[member_name].append(group_name)
     else:
-      members[member_data['id']] = [group_id]
+      members[member_id] = [group_id]
+      members_names[member_name] = [group_name]
 
   for group_id in groups_ids:
     get_all(group_id)
 
   for page_id in pages_ids:
-    get_page_data(imports, page_id) # Getting data from the page is rather different from groups
+    get_page_data(page_id) # Getting data from the page is rather different from groups
 
-  # dup_members = workbook.add_worksheet()
-  # count = 0
-  # dup_members.write(0, 0, "MemberID")
-  # dup_members.write(0, 1, "GroupsIDs")
+  f = open('data/disctint_members.csv', 'wt')
+  dup_members = csv.writer(f)
+  count = 0
+  dup_members.writerow(("MemberID", 
+                        "GroupsIDs"))
+  # I wish I had an enumerable here!!
+  for member in members:
+    dup_members.writerow((member.encode('ascii', 'ignore'),members[member]))
+  # for (mbr_id,  group_id), (mbr_nm, grp_nm) in zip(members.items(),members_names.items()):
+  #   dup_members.writerow((mbr_id,group_id,mbr_nm.encode('ascii', 'ignore'),grp_nm))
 
-  # for member in members:
-  #   if len(members[member]) > 1:
-  #     count += 1
-  #     dup_members.write(count, 0, member)
-  #     dup_members.write(count, 1, str(members[member]))
+  f.close
