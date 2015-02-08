@@ -1,30 +1,25 @@
-
+#!/usr/bin/env python
 # Members
 # Get member data from groups and page
-#!/usr/bin/env python
-
-import client
-import xlsxwriter
-import pdb
 import csv
-import re
 from urlparse import urlparse
+import pdb
 from urlparse import parse_qs
 
-def extract(worksheet, groups_ids, pages_ids=[]):
-  print "--------importing members data-------------"
-  graph = client.graph_client()
+class Member(object):
+  """Member Base class"""
+  
+  __distinct_members = {}
 
-  members = {}
-  members_names = {}
-  dups    = []
-  imports = []
-  group_lens = []
-  feeds = []
+  def __init__(self, graph, csv_writer, group_id="", page_id=""):
+    self.group_id   = group_id 
+    self.page_id    = page_id
+    self.csv_writer = csv_writer
+    self.graph      = graph
 
-  def get_page_data(page_id): # This is going to happen from a different endpoint
-    print "importing from page ID -", page_id
-    name = graph.get(page_id)
+  def get_page_data(self): 
+    print "importing from page ID -", self.page_id
+    name = self.graph.get(self.page_id)
     myuntil = ""
     nextuntil = ""
     same = False
@@ -33,7 +28,7 @@ def extract(worksheet, groups_ids, pages_ids=[]):
 
     while not same:
       myuntil = nextuntil
-      data = graph.get(page_id + "/feed?limit=999999" + nextuntil)
+      data = self.graph.get(self.page_id + "/feed?limit=999999" + nextuntil)
       nextuntil = "&until=" + parse_qs(urlparse(data['paging']['next']).query)["until"][0]
       same = (myuntil == nextuntil)
       if not same:
@@ -44,42 +39,30 @@ def extract(worksheet, groups_ids, pages_ids=[]):
         continue
 
       pages_interactors.append(feeder['from']['id'])
-      imports.append("")
-      worksheet.writerow((feeder['from']['id'] ,feeder['from']['name'].encode('ascii', 'ignore'),
-                          page_id, name['name'].encode('ascii', 'ignore')))
-      get_distinct(feeder['from']['id'],feeder['from']['name'],page_id, name['name'])
+      self.csv_writer.writerow((feeder['from']['id'] ,feeder['from']['name'].encode('ascii', 'ignore'),
+                          self.page_id, name['name'].encode('ascii', 'ignore')))
+      self.__get_distinct(feeder['from']['id'],self.page_id)
 
-  def get_all(group_id):
-    print "Importing from group ID-: %s" %(group_id)
-    data = graph.get(group_id + "/members?")
-    group_name = graph.get(group_id+"/")['name']
+  def get_group_data(self):
+    print "Importing from group ID- %s" %(self.group_id)
+    data = self.graph.get(self.group_id + "/members?")
+    group_name = self.graph.get(self.group_id)['name']
     for member_data in data['data']:
-      worksheet.writerow((member_data['id'], member_data['name'].encode('ascii', 'ignore'),group_id, group_name.encode('ascii', 'ignore')))
-      get_distinct(member_data['id'],member_data['name'], group_id, group_name)
-
-  def get_distinct(member_id, member_name, group_id, group_name):
-    if member_id in members: # If the id exists in the previous iteration
-      members[member_id].append(group_id) 
-      members_names[member_name].append(group_name)
+      self.csv_writer.writerow((member_data['id'], member_data['name'].encode('ascii', 'ignore'),self.group_id, group_name.encode('ascii', 'ignore')))
+      self.get_distinct(feeder['from']['id'],self.group_id)
+  
+  def __get_distinct(self, member_id, c_id): # c_id is the collection id, page of group id
+    if member_id in self.__distinct_members : # If the id exists in the previous iteration
+      self.__distinct_members [member_id].append(c_id)
     else:
-      members[member_id] = [group_id]
-      members_names[member_name] = [group_name]
+      self.__distinct_members [member_id] = [c_id]
 
-  for group_id in groups_ids:
-    get_all(group_id)
-
-  for page_id in pages_ids:
-    get_page_data(page_id) # Getting data from the page is rather different from groups
-
-  f = open('data/disctint_members.csv', 'wt')
-  dup_members = csv.writer(f)
-  count = 0
-  dup_members.writerow(("MemberID", 
-                        "GroupsIDs"))
-  # I wish I had an enumerable here!!
-  for member in members:
-    dup_members.writerow((member.encode('ascii', 'ignore'),members[member]))
-  # for (mbr_id,  group_id), (mbr_nm, grp_nm) in zip(members.items(),members_names.items()):
-  #   dup_members.writerow((mbr_id,group_id,mbr_nm.encode('ascii', 'ignore'),grp_nm))
-
-  f.close
+  def extract_distinct(self, csv_writer): # NOTE: csv_writer is not bound to the current object
+    for member in self.__distinct_members:
+      csv_writer.writerow((member.encode('ascii', 'ignore'),self.__distinct_members[member]))
+    
+  def extract(self):
+    if self.page_id != "": 
+      self.get_page_data()
+    else:
+      self.get_group_data()
