@@ -1,6 +1,8 @@
 
 Installing required dependencies:
   pip install facepy
+  pip install beatifulsoup3 
+  pip install requests
   pip install facebook
   pip install xlsxwriter
 

@@ -29,31 +29,31 @@ members_headers = ("MemberID","MemberName",
 distinct_members_headers= ("MemberID", "GroupsIDs")
 
 # init csv writer
-csv_feeds_writer 	  = CSVWriter(feeds_headers,"feeds").writer()
-csv_members_writer  = CSVWriter(members_headers,"members").writer()
-csv_distinct_writer = CSVWriter(distinct_members_headers,"distinct_members").writer()
+csv_feeds_writer 	  = CSVWriter(feeds_headers,"feeds")
+csv_members_writer  = CSVWriter(members_headers,"members")
+csv_distinct_writer = CSVWriter(distinct_members_headers,"distinct_members")
 
 # Get all feeds, including paginations from fb
 groups_feeds_data = feeds.get_all(groups_ids+pages_ids)
 
 # Export all feeds to csv, or xls
 for feed in groups_feeds_data:
-	page = Page(graph,feed,csv_feeds_writer)
-	# try:
-	page.extract()
-	# except Exception, e: # I am assumming the error here is token expiring
-	# 	print e
- #  	token = raw_input("\nEnter New token ")
- #  	graph = client.graph(token)
- #  	continue
+	page = Page(graph,feed,csv_feeds_writer.writer())
+	try:
+		page.extract()
+	except Exception, e: # I am assumming the error here is token expiring
+		print e
+  	token = raw_input("\nEnter New token ")
+  	graph = client.graph(token)
+  	continue
 
 # Member data in groups and pages 
 for c_id in pages_ids + groups_ids:
-	member = Member(graph, csv_members_writer, c_id, c_id)
+	member = Member(graph, csv_members_writer.writer(), c_id, c_id)
 	member.extract()
-	member.extract_distinct(csv_distinct_writer)
+	member.extract_distinct(csv_distinct_writer.writer())
 
 # Close the files 
 csv_feeds_writer.close()
 csv_members_writer.close()
-csv_distinct_members_writer.close()
+csv_distinct_writer.close()
