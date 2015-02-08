@@ -22,8 +22,6 @@ def start_feeds_sheet():
 	entries.write(0, 4, "MemberName")
 	entries.write(0, 5, "AssociatedID")
 	entries.write(0, 6, "EntryType")
-	entries.write(0, 7, "SharedParentID")
-	entries.write(0, 8, "SeenCount")
 	entries.write(0, 9, "TimeStamp")
 	entries.write(0, 10, "ShareCount")
 	entries.write(0, 11, "LikeCount")

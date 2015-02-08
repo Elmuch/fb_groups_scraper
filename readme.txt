@@ -1,12 +1,14 @@
 
-
-Installing depencies:
+Installing required dependencies:
   pip install facepy
+  pip install beatifulsoup3 
+  pip install requests
   pip install facebook
   pip install xlsxwriter
 
 Get your token here:
   https://developers.facebook.com/tools/explorer/
+  NOTE: Get the extended permission token
 
 Accounts for testing:
   user name     | email               |  password      |  ID
@@ -23,8 +25,11 @@ Groups:
 Pages:
   6-Maasai Youth Empowerment Strategic Scheme (MYESS)
 
-Debugging
-  use pdb.set_trace()
 
 To get the data:
   python scripts/run
+
+share:
+  it means that this is not an own's post. and the share count represents how much that link was shared in the internet. 
+
+OriginalMember field will only be for the shares within fb.
