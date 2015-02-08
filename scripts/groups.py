@@ -1,3 +1,5 @@
+# This is legacy, all groups logic is contained in pages 
+
 import client
 import xlsxwriter
 import pdb

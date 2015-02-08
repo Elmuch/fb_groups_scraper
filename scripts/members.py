@@ -49,7 +49,7 @@ class Member(object):
     group_name = self.graph.get(self.group_id)['name']
     for member_data in data['data']:
       self.csv_writer.writerow((member_data['id'], member_data['name'].encode('ascii', 'ignore'),self.group_id, group_name.encode('ascii', 'ignore')))
-      self.get_distinct(feeder['from']['id'],self.group_id)
+      self.__get_distinct(feeder['from']['id'],self.group_id)
   
   def __get_distinct(self, member_id, c_id): # c_id is the collection id, page of group id
     if member_id in self.__distinct_members : # If the id exists in the previous iteration
@@ -57,7 +57,7 @@ class Member(object):
     else:
       self.__distinct_members [member_id] = [c_id]
 
-  def extract_distinct(self, csv_writer): # NOTE: csv_writer is not bound to the current object
+  def extract_distinct(self, csv_writer): # NOTE: csv_writer here is not bound to the current object
     for member in self.__distinct_members:
       csv_writer.writerow((member.encode('ascii', 'ignore'),self.__distinct_members[member]))
     
