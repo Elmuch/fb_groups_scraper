@@ -1,33 +1,15 @@
-
 Installing required dependencies:
-  pip install facepy
-  pip install beatifulsoup3 
-  pip install requests
-  pip install facebook
-  pip install xlsxwriter
+  pip install -r requirements.txt
 
 Get your token here:
   https://developers.facebook.com/tools/explorer/
+  add the token to client.py
   NOTE: Get the extended permission token
 
-Accounts for testing:
-  user name     | email               |  password      |  ID
-................|.....................|................|.............
-  Joey Lamothe  | jlamlam@hotmail.com | *************  | 100008796756057
-
-Groups:
-  1-Elangata Wuas Youth Association
-  2-Kajiado County Congress (Lelero e Maa)
-  3-Torosei Elites Association
-  4-Loodokilani Ward Development Forum
-  5-Activistas Kajiado Chapter
-
-Pages:
-  6-Maasai Youth Empowerment Strategic Scheme (MYESS)
-
+make a data directory 
 
 To get the data:
-  python scripts/run
+  ./run.py 
 
 share:
   it means that this is not an own's post. and the share count represents how much that link was shared in the internet. 

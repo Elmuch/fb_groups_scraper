@@ -1,7 +1,6 @@
 
-/client.py
 /log/*.log
-/data/
+data/*
 /scripts/*.pyc
 /to_send/
 .swp

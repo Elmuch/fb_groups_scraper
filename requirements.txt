@@ -1,0 +1,4 @@
+facepy
+requests
+facebook
+xlsxwriter

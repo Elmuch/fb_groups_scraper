@@ -1,11 +1,9 @@
 #!/usr/bin/python
 
 import csv
-import client
-import feeds
-from csv_write import CSVWriter
-from members import Member
-from pages import Page
+from scripts import (client, feeds,csv_write,members, pages)
+
+# Feel free to change these to your own groups
 
 #groups_ids  = ['324309874271040','206494919465453','255488514638473','334271300068285','263457997018425']
 groups_ids  = ['324309874271040'] # Use this for testing
@@ -29,23 +27,17 @@ members_headers = ("MemberID","MemberName",
 distinct_members_headers= ("MemberID", "GroupsIDs")
 
 # init csv writer
-csv_feeds_writer 	  = CSVWriter(feeds_headers,"feeds")
-csv_members_writer  = CSVWriter(members_headers,"members")
-csv_distinct_writer = CSVWriter(distinct_members_headers,"distinct_members")
+csv_feeds_writer 	  = csv_write.CSVWriter(feeds_headers,"feeds")
+csv_members_writer  = csv_write.CSVWriter(members_headers,"members")
+csv_distinct_writer = csv_write.CSVWriter(distinct_members_headers,"distinct_members")
 
 # Get all feeds, including paginations from fb
 groups_feeds_data = feeds.get_all(groups_ids+pages_ids)
 
 # Export all feeds to csv, or xls
 for feed in groups_feeds_data:
-	page = Page(graph,feed,csv_feeds_writer.writer())
-	try:
-		page.extract()
-	except Exception, e: # I am assumming the error here is token expiring
-		print e
-  	token = raw_input("\nEnter New token ")
-  	graph = client.graph(token)
-  	continue
+	page = pages.Page(graph,feed,csv_feeds_writer.writer())
+	page.extract()
 
 # Member data in groups and pages 
 for c_id in pages_ids + groups_ids:

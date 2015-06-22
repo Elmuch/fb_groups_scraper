@@ -2,6 +2,6 @@
 
 from facepy import GraphAPI
 
-def graph_client(token="CAACEdEose0cBAMGLgCwLAmdcKCg1vODHdziBQ5E5wNZBx2EtTJdXZCFhQkjDfZAkE2PV6DgBTJUD8YNdj66OACLV9eKYej2ehcH8cTU92GojZBssHWRNpvJQk5ifWdo8u5SJgM90gqoM9KZBAo6wBuvU8n6D5WyHvZC8RhdsR6YZCUsi9AEEPhk2j1b4938Qh1El1DEXxVYJXjFdzezlNGo"):
+def graph_client(token="YOUR TOKEN"):
   return GraphAPI(token)
   
